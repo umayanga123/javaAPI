@@ -1,0 +1,273 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="UTF-8">
+	<title>Seat reservation</title>
+	<script>
+		function getRootUri() {
+			return "ws://"
+					+ (document.location.hostname == "" ? "localhost"
+							: document.location.hostname)
+					+ ":"
+					+ (document.location.port == "" ? "8080"
+							: document.location.port);
+		}
+	
+		var ws = null;
+		var wsUrl = null;
+		var rowCount = 10;
+		var colCount = 20;
+		var seatSize = 30;
+		var seatPadding = 2;
+		var mousePos = null;
+		var selectedSeat = null;
+		var canvas = null;
+		var context = null; // This "context" variable must not be renamed and must not be made local
+		var lockId = null;
+	
+		function init() {
+			// TODO: the word NEPTUN should be replaced with the own Neptune-code in capital letters,
+			// and the client should connect to this WebSocket address:
+			wsUrl = getRootUri() + "/WebSocket_Q71MBS/cinema";
+			// The following lines initialize the canvas:
+			canvas = document.getElementById('room');
+			canvas.addEventListener('mousemove', function(evt) {
+				mousePos = getMousePos(canvas, evt);
+			});
+			canvas.addEventListener('click', function(evt) {
+				mousePos = getMousePos(canvas, evt);
+				selectSeat();
+			});
+			context = canvas.getContext('2d');
+	
+			draw();
+			// Connect to WebSocket
+			connectWebSocket();
+	
+		}
+	
+		// TODO: the WebSocket event handlers can come here
+		// Connect to WebSocket
+		function connectWebSocket() {
+			ws = new WebSocket(wsUrl);
+			ws.onopen = function() {
+				console.log('Connected to WebSocket');
+				//inital room with pre difind valus
+				initRoom();
+			};
+			ws.onmessage = function(event) {
+				var message = JSON.parse(event.data);
+				handleMessage(message);
+			};
+			ws.onerror = function(error) {
+				console.error('WebSocket error:', error);
+			};
+			ws.onclose = function() {
+				console.log('Disconnected from WebSocket');
+			};
+		}
+	
+		// Handle incoming messages from the server
+		function handleMessage(message) {
+			switch (message.type) {
+			case 'roomSize':
+				handleRoomSize(message);
+				break;
+			case 'seatStatus':
+				handleSeatStatus(message);
+				break;
+			case 'lockResult':
+				handleLockResult(message);
+				break;
+			case 'error':
+				handleError(message);
+				break;
+			}
+		}
+	
+		// Handle 'roomSize' message
+		function handleRoomSize(message) {
+			var rows = message.rows;
+			var columns = message.columns;
+			// Update row and column count
+			rowCount = rows;
+			colCount = columns;
+			// Redraw canvas
+			draw();
+			// Request seat status update
+			updateSeats();
+		}
+	
+		// Handle 'seatStatus' message
+		function handleSeatStatus(message) {
+			var row = message.row;
+			var column = message.column;
+			var status = message.status;
+			// Draw seat with updated status
+			drawSeat(row - 1, column - 1, status);
+		}
+	
+		// Handle 'lockResult' message
+		function handleLockResult(message) {
+			this.lockId = message.lockId;
+			// Handle lock result
+			// For example, display lockId in UI
+		}
+	
+		// Handle 'error' message
+		function handleError(message) {
+			var errorMessage = message.message;
+			// Display error message
+			alert(errorMessage);
+		}
+	
+		// Request room size update from the server
+		function updateRoomSize() {
+			var message = JSON.stringify({
+				type : 'getRoomSize'
+			});
+			ws.send(message);
+		}
+	
+		// Request seat status update from the server
+		function updateSeats() {
+			var message = JSON.stringify({
+				type : 'updateSeats'
+			});
+			ws.send(message);
+		}
+	
+		// Initialize the room with the given rows and columns
+		function initRoom() {
+			var rows = parseInt(document.getElementById('rows').value);
+			var columns = parseInt(document.getElementById('columns').value);
+			var message = JSON.stringify({
+				type : 'initRoom',
+				rows : rows,
+				columns : columns
+			});
+			ws.send(message);
+			selectedSeat = null;
+			this.lockId = null;
+		}
+	
+		// lock the currently locked seat
+		function lockSeat() {
+			var rows = parseInt(document.getElementById('rows').value);
+			var columns = parseInt(document.getElementById('columns').value);
+			var message = JSON.stringify({
+				type : 'lockSeat',
+				row : rows,
+				column : columns
+			});
+			ws.send(message);
+		}
+	
+		// reserveSeat the currently locked seat
+		function reserveSeat() {
+			var message = JSON.stringify({
+				type : 'reserveSeat',
+				"lockId" : this.lockId
+			});
+			ws.send(message);
+		}
+	
+		// Draws the canvas with free seats:
+		function draw() {
+			canvas.height = rowCount * seatSize;
+			canvas.width = colCount * seatSize;
+			for (i = 0; i < rowCount; i++) {
+				for (j = 0; j < colCount; j++) {
+					drawSeat(i, j, "free");
+				}
+			}
+		}
+	
+		// Draws a single seat to the canvas:
+		function drawSeat(row, col, status) {
+			context.beginPath();
+			switch (status) {
+			case "free":
+				context.fillStyle = 'green';
+				break;
+			case "locked":
+				context.fillStyle = 'yellow';
+				break;
+			case "reserved":
+				context.fillStyle = 'red';
+				break;
+			default:
+				context.fillStyle = 'gray';
+				break;
+			}
+			context.rect(col * seatSize, row * seatSize, seatSize - seatPadding,
+					seatSize - seatPadding);
+			context.fill();
+			context.closePath();
+		}
+	
+		// Selects and locks a seat.
+		// Only one seat per client can be locked at a time.
+		function selectSeat() {
+			var col = parseInt(Math.floor(mousePos.x / seatSize)) + 1;
+			var row = parseInt(Math.floor(mousePos.y / seatSize)) + 1;
+			if (selectedSeat != null) {
+				// TODO: this is the old locked seat, its locked should be released
+				var message = JSON.stringify({
+					type : 'unlockSeat',
+					"lockId" : this.lockId
+				});
+				ws.send(message);
+			}
+			selectedSeat = {
+				row : row,
+				column : col
+			};
+			var message = JSON.stringify({
+				type : 'lockSeat',
+				row : row,
+				column : col
+			});
+			ws.send(message);
+		}
+	
+		// Returns the mouse position inside the canvas:
+		function getMousePos(canvas, evt) {
+			var rect = canvas.getBoundingClientRect();
+			return {
+				x : evt.clientX - rect.left,
+				y : evt.clientY - rect.top
+			};
+		}
+	
+		window.addEventListener("load", init, false);
+	</script>
+	</head>
+	<!-- Warning: do not change the "id" and "name" attributes of the HTML elements after this line!
+		Do not remove or restructure the HTML tags either! Do not apply any CSS styles!
+	    TODO: event handlers can be added to the buttons. -->
+	<body>
+		<h1 style="text-align: center;">Seat reservation</h1>
+		<br />
+		<div style="text-align: center;">
+			<!-- This button should update the size of the room and the status of all the seats, 
+			     and the seats should be drawn to the canvas. -->
+	
+			<input id="refreshButton" value="Refresh" type="button"
+				onclick="updateRoomSize()" /><br />
+			<!-- The input gives the number of rows of the room for initialization: -->
+			<label for="rows">row count:</label><input id="rows" name="rows"
+				value="10" type="text" size="5" />
+			<!-- The input gives the number of columns of the room for initialization: -->
+			<label for="columns">column count:</label><input id="columns"
+				name="columns" value="20" type="text" size="5" />
+			<!-- The following button should initialize the room with the given rows and columns: -->
+			<input id="initButton" value="Init" type="button" onclick="initRoom()" /><br />
+			<!-- The following button should reserve the currently locked seat: -->
+			<input id="reserveButton" value="Reserve" type="button"
+				onclick="reserveSeat()" /><br />
+			<!-- This is the canvas for drawing the seats: -->
+			<canvas id="room"></canvas>
+		</div>
+	</body>
+</html>
