@@ -1,0 +1,12 @@
+spring:
+ application:
+  name: hellomicro.frontend
+grpc:
+ server:
+  port: 5100
+ client:
+  helloBackend:
+   address: 'static://localhost:5000'
+   enableKeepAlive: true
+   keepAliveWithoutCalls: true
+   negotiationType: plaintext
