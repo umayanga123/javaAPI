@@ -1,21 +1,21 @@
-version: '3'
+version: '3.8.0'
 services:
- MoviePi_Q71MBS:
+ movie-pi-Q71MBS:
   build:
-    context:MoviePi_Q71MBS
-  image: MoviePi_Q71MBS:latest
+    context: MoviePi_Q71MBS
+  image: moviepi_q71mbs:latest
   networks:
    - movie-network
- MoviePi_Q71MBS:
+ movie-e-Q71MBS:
   build:
-    context:MoviePi_Q71MBS
-  image: MoviePi_Q71MBS:latest
+    context: MovieE_Q71MBS
+  image: moviee_q71mbs:latest
   networks:
    - movie-network
  MovieStream_Q71MBS:
   build:
-    context:MovieStream_Q71MBS
-  image: MovieStream_Q71MBS:latest
+    context: MovieStream_Q71MBS
+  image: moviestream_q71mbs:latest
   ports:
    - 5000:5000
   networks:

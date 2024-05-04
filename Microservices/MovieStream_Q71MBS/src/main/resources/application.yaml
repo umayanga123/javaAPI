@@ -11,7 +11,7 @@ grpc:
      keepAliveWithoutCalls: true
      negotiationType: plaintext
     movie-2:
-     address: 'dns:///movie-pi-Q71MBS'
+     address: 'dns:///movie-e-Q71MBS'
      enableKeepAlive: true
      keepAliveWithoutCalls: true
      negotiationType: plaintext
