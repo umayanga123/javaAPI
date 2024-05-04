@@ -1,0 +1,13 @@
+version: '3'
+services:
+ movie-network:
+  build:
+    context:MovieStream_Q71MBS
+  image: MovieStream_Q71MBS:latest
+  ports:
+   - 5000:5000
+  networks:
+   - movie-network
+networks:
+  moview-network:
+    driver: bridge

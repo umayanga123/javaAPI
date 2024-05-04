@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: MoviePi_Q71MBS
+grpc:
+  server:
+    port: 5100
