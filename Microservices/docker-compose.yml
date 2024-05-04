@@ -1,6 +1,18 @@
 version: '3'
 services:
- movie-network:
+ MoviePi_Q71MBS:
+  build:
+    context:MoviePi_Q71MBS
+  image: MoviePi_Q71MBS:latest
+  networks:
+   - movie-network
+ MoviePi_Q71MBS:
+  build:
+    context:MoviePi_Q71MBS
+  image: MoviePi_Q71MBS:latest
+  networks:
+   - movie-network
+ MovieStream_Q71MBS:
   build:
     context:MovieStream_Q71MBS
   image: MovieStream_Q71MBS:latest
@@ -9,5 +21,5 @@ services:
   networks:
    - movie-network
 networks:
-  moview-network:
+  movie-network:
     driver: bridge

@@ -3,4 +3,4 @@ spring:
     name: MoviePi_Q71MBS
 grpc:
    server:
-     port: 5200
+     port: 80

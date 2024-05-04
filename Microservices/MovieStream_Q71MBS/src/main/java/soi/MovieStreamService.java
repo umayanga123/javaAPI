@@ -72,7 +72,6 @@ public class MovieStreamService extends MovieStreamImplBase {
 				titles.add(title);
 
 				// When all titles are collected, get the lengths
-				System.out.print(titles.size());
 				if (titles.size() == 3) {
 					// Get lengths for all titles
 					getLengths(responseObserver, titles, lengths);
@@ -107,7 +106,6 @@ public class MovieStreamService extends MovieStreamImplBase {
 					lengths.add(length);
 
 					// When all lengths are collected, construct the reply
-					System.out.print(lengths.size());
 					if (lengths.size() == 3) {
 						// Construct GetMoviesReply
 						GetMoviesReply movieList = constructAndGetMoviesReply(titles, lengths);

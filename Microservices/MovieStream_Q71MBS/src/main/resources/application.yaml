@@ -6,12 +6,12 @@ grpc:
     port: 5000
   client:
     movie-1:
-     address: 'static://localhost:5100'
+     address: 'dns:///movie-pi-Q71MBS'
      enableKeepAlive: true
      keepAliveWithoutCalls: true
      negotiationType: plaintext
     movie-2:
-     address: 'static://localhost:5200'
+     address: 'dns:///movie-pi-Q71MBS'
      enableKeepAlive: true
      keepAliveWithoutCalls: true
      negotiationType: plaintext
