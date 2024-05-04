@@ -9,5 +9,5 @@ FROM compile AS package
 COPY ./src ./src
 RUN mvn package
 FROM base AS final
-COPY --from=package /opt/src/hellomicro.backend/target/MovieStream_Q71MBS-0.0.1-SNAPSHOT-exec.jar .
+COPY --from=package /opt/src/MovieStream_Q71MBS/target/MovieStream_Q71MBS-0.0.1-SNAPSHOT-exec.jar .
 CMD ["java", "-jar", "/opt/app/MovieStream_Q71MBS-0.0.1-SNAPSHOT-exec.jar"]
